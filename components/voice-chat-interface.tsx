@@ -51,13 +51,13 @@ export function VoiceChatInterface() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="border-b p-4 flex items-center justify-between">
+      <div className="border-b px-4 py-2 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Voice Chat</h1>
-          <p className="text-sm text-muted-foreground">AI Assistant with Live Transcription</p>
+          <h1 className="text-lg font-bold">Voice Chat</h1>
+          <p className="text-xs text-muted-foreground">AI Assistant</p>
         </div>
         <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
+          <Settings className="h-4 w-4" />
         </Button>
       </div>
 
@@ -89,74 +89,63 @@ export function VoiceChatInterface() {
           </Conversation>
 
           {/* Voice Controls */}
-          <Card className="m-4 p-4 border-t rounded-lg">
-            <div className="flex flex-col gap-4">
+          <Card className="mx-4 mb-3 mt-2 p-3 border-t rounded-lg">
+            <div className="flex items-center gap-3">
               {/* Waveform Visualizer */}
-              <div className="bg-muted rounded-lg p-2">
-                <LiveWaveform active={isListening} height={60} barCount={30} />
+              <div className="flex-1 bg-muted rounded-lg p-2">
+                <LiveWaveform active={isListening} height={40} barCount={24} />
               </div>
 
-              {/* Control Buttons */}
-              <div className="flex items-center justify-center gap-4">
-                <Button
-                  variant={isListening ? "destructive" : "default"}
-                  size="lg"
-                  onClick={toggleListening}
-                  className="gap-2"
-                >
-                  {isListening ? (
-                    <>
-                      <MicOff className="h-5 w-5" />
-                      Stop Listening
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-5 w-5" />
-                      Start Voice Chat
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Status Indicator */}
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Status:{" "}
-                  <span className="font-medium text-foreground">
-                    {agentState === "idle" && "Ready"}
-                    {agentState === "listening" && "Listening..."}
-                    {agentState === "thinking" && "Processing..."}
-                    {agentState === "speaking" && "Speaking..."}
-                  </span>
-                </p>
-              </div>
+              {/* Control Button */}
+              <Button
+                variant={isListening ? "destructive" : "default"}
+                size="default"
+                onClick={toggleListening}
+                className="gap-2 shrink-0"
+              >
+                {isListening ? (
+                  <>
+                    <MicOff className="h-4 w-4" />
+                    Stop
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-4 w-4" />
+                    Start
+                  </>
+                )}
+              </Button>
             </div>
           </Card>
         </div>
 
         {/* Sidebar - Agent Visualization */}
-        <div className="w-full lg:w-80 border-l flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Agent Status</h2>
-            <p className="text-xs text-muted-foreground">Visual feedback</p>
+        <div className="w-full lg:w-56 border-l flex flex-col">
+          <div className="px-3 py-2 border-b">
+            <h2 className="font-semibold text-sm">Status</h2>
           </div>
 
-          <div className="flex-1 flex items-center justify-center p-8">
-            <Orb agentState={agentState} className="w-full" />
+          <div className="flex-1 flex items-center justify-center p-4">
+            <Orb agentState={agentState} className="w-32 h-32" />
           </div>
 
-          <div className="p-4 border-t space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="px-3 py-2 border-t space-y-1.5 text-xs">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">State</span>
+              <span className="font-medium">
+                {agentState === "idle" && "Ready"}
+                {agentState === "listening" && "Listening"}
+                {agentState === "thinking" && "Thinking"}
+                {agentState === "speaking" && "Speaking"}
+              </span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Messages</span>
               <span className="font-medium">{messages.length}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Mode</span>
-              <span className="font-medium">Voice</span>
-            </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Connection</span>
-              <span className="font-medium text-green-600">Connected</span>
+              <span className="font-medium text-green-500">Active</span>
             </div>
           </div>
         </div>
