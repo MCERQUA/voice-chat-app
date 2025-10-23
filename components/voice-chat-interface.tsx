@@ -56,40 +56,60 @@ export function VoiceChatInterface() {
           <h1 className="text-lg font-bold">Voice Chat</h1>
           <p className="text-xs text-muted-foreground">AI Assistant</p>
         </div>
-        <Button variant="ghost" size="icon">
-          <Settings className="h-4 w-4" />
-        </Button>
+
+        <div className="flex items-center gap-6 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">State:</span>
+            <span className="font-medium">
+              {agentState === "idle" && "Ready"}
+              {agentState === "listening" && "Listening"}
+              {agentState === "thinking" && "Thinking"}
+              {agentState === "speaking" && "Speaking"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Messages:</span>
+            <span className="font-medium">{messages.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Connection:</span>
+            <span className="font-medium text-green-500">Active</span>
+          </div>
+          <Button variant="ghost" size="icon">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Conversation Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <Conversation className="flex-1 min-h-0">
-            <ConversationContent>
-              {messages.map((message) => (
-                <Message key={message.id} from={message.from}>
-                  <MessageAvatar
-                    name={message.from === "user" ? "You" : "AI"}
-                    src={message.from === "assistant" ? "/ai-avatar.png" : undefined}
-                  />
-                  <MessageContent>
-                    {message.from === "assistant" ? (
-                      <Response>{message.content}</Response>
-                    ) : (
-                      <p className="text-sm">{message.content}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {message.timestamp.toLocaleTimeString()}
-                    </p>
-                  </MessageContent>
-                </Message>
-              ))}
-            </ConversationContent>
-          </Conversation>
+        <Conversation className="flex-1 min-h-0">
+          <ConversationContent>
+            {messages.map((message) => (
+              <Message key={message.id} from={message.from}>
+                <MessageAvatar
+                  name={message.from === "user" ? "You" : "AI"}
+                  src={message.from === "assistant" ? "/ai-avatar.png" : undefined}
+                />
+                <MessageContent>
+                  {message.from === "assistant" ? (
+                    <Response>{message.content}</Response>
+                  ) : (
+                    <p className="text-sm">{message.content}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
+                </MessageContent>
+              </Message>
+            ))}
+          </ConversationContent>
+        </Conversation>
 
-          {/* Voice Controls */}
-          <Card className="mx-4 mb-3 mt-2 p-3 border-t rounded-lg">
+        {/* Voice Controls - Bottom Fixed */}
+        <div className="border-t bg-card">
+          <div className="max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center gap-3">
               {/* Waveform Visualizer */}
               <div className="flex-1 bg-muted rounded-lg p-2">
@@ -115,37 +135,6 @@ export function VoiceChatInterface() {
                   </>
                 )}
               </Button>
-            </div>
-          </Card>
-        </div>
-
-        {/* Sidebar - Agent Visualization */}
-        <div className="w-full lg:w-56 border-l flex flex-col">
-          <div className="px-3 py-2 border-b">
-            <h2 className="font-semibold text-sm">Status</h2>
-          </div>
-
-          <div className="flex-1 flex items-center justify-center p-4">
-            <Orb agentState={agentState} className="w-32 h-32" />
-          </div>
-
-          <div className="px-3 py-2 border-t space-y-1.5 text-xs">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">State</span>
-              <span className="font-medium">
-                {agentState === "idle" && "Ready"}
-                {agentState === "listening" && "Listening"}
-                {agentState === "thinking" && "Thinking"}
-                {agentState === "speaking" && "Speaking"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Messages</span>
-              <span className="font-medium">{messages.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Connection</span>
-              <span className="font-medium text-green-500">Active</span>
             </div>
           </div>
         </div>
