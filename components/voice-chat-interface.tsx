@@ -19,9 +19,10 @@ interface ChatMessage {
 
 interface VoiceChatInterfaceProps {
   onLogout?: () => void
+  isFirstLogin?: boolean
 }
 
-export function VoiceChatInterface({ onLogout }: VoiceChatInterfaceProps) {
+export function VoiceChatInterface({ onLogout, isFirstLogin }: VoiceChatInterfaceProps) {
   const [isListening, setIsListening] = React.useState(false)
   const [agentState, setAgentState] = React.useState<"idle" | "listening" | "thinking" | "speaking">("idle")
   const [inputMessage, setInputMessage] = React.useState("")
@@ -31,9 +32,59 @@ export function VoiceChatInterface({ onLogout }: VoiceChatInterfaceProps) {
   // Start with an empty conversation
   const [messages, setMessages] = React.useState<ChatMessage[]>([])
 
+  // Auto-run /josh-intro on first login
+  React.useEffect(() => {
+    if (isFirstLogin && messages.length === 0) {
+      // Send the /josh-intro command automatically
+      sendAutoMessage("/josh-intro")
+    }
+  }, [isFirstLogin])
+
   const toggleListening = () => {
     setIsListening(!isListening)
     setAgentState(isListening ? "idle" : "listening")
+  }
+
+  const sendAutoMessage = async (message: string) => {
+    // Send a message without showing user input (for auto commands)
+    setAgentState("thinking")
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message,
+          sessionId: sessionId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response')
+      }
+
+      // Add assistant response to chat
+      const assistantMessage: ChatMessage = {
+        id: `msg-${Date.now()}-response`,
+        from: "assistant",
+        content: data.response,
+        timestamp: new Date(),
+      }
+
+      setMessages([assistantMessage])
+      setAgentState("idle")
+
+    } catch (error) {
+      console.error('Error sending auto message:', error)
+      setAgentState("idle")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const sendMessage = async () => {
