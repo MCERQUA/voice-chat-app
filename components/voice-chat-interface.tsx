@@ -8,7 +8,7 @@ import { Response } from "@/components/ui/response"
 import { LiveWaveform } from "@/components/ui/live-waveform"
 import { Orb } from "@/components/ui/orb"
 import { Button } from "@/components/ui/button"
-import { Mic, MicOff, Settings, Send } from "lucide-react"
+import { Mic, MicOff, Settings, Send, LogOut } from "lucide-react"
 
 interface ChatMessage {
   id: string
@@ -17,7 +17,11 @@ interface ChatMessage {
   timestamp: Date
 }
 
-export function VoiceChatInterface() {
+interface VoiceChatInterfaceProps {
+  onLogout?: () => void
+}
+
+export function VoiceChatInterface({ onLogout }: VoiceChatInterfaceProps) {
   const [isListening, setIsListening] = React.useState(false)
   const [agentState, setAgentState] = React.useState<"idle" | "listening" | "thinking" | "speaking">("idle")
   const [inputMessage, setInputMessage] = React.useState("")
@@ -130,9 +134,21 @@ export function VoiceChatInterface() {
             <span className="text-muted-foreground">Connection:</span>
             <span className="font-medium text-green-500">Active</span>
           </div>
-          <Button variant="ghost" size="icon">
-            <Settings className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon">
+              <Settings className="h-4 w-4" />
+            </Button>
+            {onLogout && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onLogout}
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
