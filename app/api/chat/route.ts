@@ -21,8 +21,9 @@ export async function POST(request: NextRequest) {
     // Execute claude code with continuation flag
     // The -c flag maintains conversation context across messages
     // Claude Code expects input from stdin, so we use echo
+    // Run permissionless so it can execute commands without asking
     const escapedMessage = message.replace(/'/g, "'\"'\"'");  // Escape single quotes for bash
-    const command = `echo '${escapedMessage}' | claude code -c "${session}" --print`;
+    const command = `echo '${escapedMessage}' | claude code -c "${session}" --print --dangerously-skip-permissions`;
 
     console.log(`[API] Session: ${session}, Message: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
 
