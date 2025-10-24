@@ -8,7 +8,7 @@ import { Response } from "@/components/ui/response"
 import { LiveWaveform } from "@/components/ui/live-waveform"
 import { Orb } from "@/components/ui/orb"
 import { Button } from "@/components/ui/button"
-import { Mic, MicOff, Settings } from "lucide-react"
+import { Mic, MicOff, Settings, Send } from "lucide-react"
 
 interface ChatMessage {
   id: string
@@ -20,32 +20,87 @@ interface ChatMessage {
 export function VoiceChatInterface() {
   const [isListening, setIsListening] = React.useState(false)
   const [agentState, setAgentState] = React.useState<"idle" | "listening" | "thinking" | "speaking">("idle")
+  const [inputMessage, setInputMessage] = React.useState("")
+  const [sessionId, setSessionId] = React.useState<string>(`session-${Date.now()}`)
+  const [isLoading, setIsLoading] = React.useState(false)
 
-  // Mock messages for UI demonstration
-  const [messages, setMessages] = React.useState<ChatMessage[]>([
-    {
-      id: "1",
-      from: "assistant",
-      content: "Hello! I'm your AI assistant. How can I help you today?",
-      timestamp: new Date(Date.now() - 60000),
-    },
-    {
-      id: "2",
-      from: "user",
-      content: "I need help understanding the ElevenLabs voice API.",
-      timestamp: new Date(Date.now() - 45000),
-    },
-    {
-      id: "3",
-      from: "assistant",
-      content: "I'd be happy to help you understand the ElevenLabs voice API. The API provides several key features:\n\n- Text-to-speech conversion with multiple voices\n- Real-time voice streaming\n- Custom voice cloning\n- Voice settings customization\n\nWhat specific aspect would you like to know more about?",
-      timestamp: new Date(Date.now() - 30000),
-    },
-  ])
+  // Start with an empty conversation
+  const [messages, setMessages] = React.useState<ChatMessage[]>([])
 
   const toggleListening = () => {
     setIsListening(!isListening)
     setAgentState(isListening ? "idle" : "listening")
+  }
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return
+
+    const userMessage: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      from: "user",
+      content: inputMessage,
+      timestamp: new Date(),
+    }
+
+    // Add user message to chat
+    setMessages(prev => [...prev, userMessage])
+    setInputMessage("")
+    setAgentState("thinking")
+    setIsLoading(true)
+
+    try {
+      // Call our API endpoint
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputMessage,
+          sessionId: sessionId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response')
+      }
+
+      // Add assistant response to chat
+      const assistantMessage: ChatMessage = {
+        id: `msg-${Date.now()}-response`,
+        from: "assistant",
+        content: data.response,
+        timestamp: new Date(),
+      }
+
+      setMessages(prev => [...prev, assistantMessage])
+      setAgentState("idle")
+
+    } catch (error) {
+      console.error('Error sending message:', error)
+
+      // Add error message to chat
+      const errorMessage: ChatMessage = {
+        id: `msg-${Date.now()}-error`,
+        from: "assistant",
+        content: `Error: ${error instanceof Error ? error.message : 'Failed to get response'}`,
+        timestamp: new Date(),
+      }
+
+      setMessages(prev => [...prev, errorMessage])
+      setAgentState("idle")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
   }
 
   return (
@@ -107,34 +162,57 @@ export function VoiceChatInterface() {
           </ConversationContent>
         </Conversation>
 
-        {/* Voice Controls - Bottom Fixed */}
+        {/* Input Controls - Bottom Fixed */}
         <div className="border-t bg-card">
           <div className="max-w-4xl mx-auto px-4 py-3">
-            <div className="flex items-center gap-3">
-              {/* Waveform Visualizer */}
-              <div className="flex-1 bg-muted rounded-lg p-2">
-                <LiveWaveform active={isListening} height={40} barCount={24} />
+            <div className="flex flex-col gap-2">
+              {/* Text Input Row */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message..."
+                  disabled={isLoading}
+                  className="flex-1 bg-muted text-foreground placeholder:text-muted-foreground px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={!inputMessage.trim() || isLoading}
+                  size="default"
+                  className="gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                      Sending
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Send
+                    </>
+                  )}
+                </Button>
               </div>
 
-              {/* Control Button */}
-              <Button
-                variant={isListening ? "destructive" : "default"}
-                size="default"
-                onClick={toggleListening}
-                className="gap-2 shrink-0"
-              >
-                {isListening ? (
-                  <>
-                    <MicOff className="h-4 w-4" />
-                    Stop
-                  </>
-                ) : (
-                  <>
-                    <Mic className="h-4 w-4" />
-                    Start
-                  </>
-                )}
-              </Button>
+              {/* Voice Controls Row (for future use) */}
+              <div className="flex items-center gap-2 opacity-50">
+                <div className="flex-1 bg-muted rounded-lg p-1.5">
+                  <LiveWaveform active={isListening} height={30} barCount={20} />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleListening}
+                  disabled
+                  className="gap-2 shrink-0"
+                >
+                  <Mic className="h-3 w-3" />
+                  Voice (Soon)
+                </Button>
+              </div>
             </div>
           </div>
         </div>

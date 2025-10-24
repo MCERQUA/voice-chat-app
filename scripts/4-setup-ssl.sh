@@ -23,16 +23,31 @@ echo "================================"
 
 # Check if DNS is pointing to this server
 echo "Checking DNS..."
-SERVER_IP=$(curl -s ifconfig.me)
+SERVER_IP_V4=$(curl -s -4 ifconfig.me 2>/dev/null || echo "")
+SERVER_IP_V6=$(curl -s -6 ifconfig.me 2>/dev/null || echo "")
 DOMAIN_IP=$(dig +short $DOMAIN | tail -n1)
 
-echo "Server IP: $SERVER_IP"
+if [ -n "$SERVER_IP_V4" ]; then
+    echo "Server IPv4: $SERVER_IP_V4"
+fi
+if [ -n "$SERVER_IP_V6" ]; then
+    echo "Server IPv6: $SERVER_IP_V6"
+fi
 echo "Domain resolves to: $DOMAIN_IP"
 
-if [ "$SERVER_IP" != "$DOMAIN_IP" ]; then
+# Check if domain matches either IPv4 or IPv6
+if [ "$DOMAIN_IP" = "$SERVER_IP_V4" ] || [ "$DOMAIN_IP" = "$SERVER_IP_V6" ]; then
+    echo "✅ DNS is configured correctly!"
+else
     echo ""
     echo "⚠️  Warning: DNS may not be configured correctly"
-    echo "Make sure your domain's A record points to: $SERVER_IP"
+    echo "Make sure your domain's A record points to one of:"
+    if [ -n "$SERVER_IP_V4" ]; then
+        echo "  IPv4: $SERVER_IP_V4"
+    fi
+    if [ -n "$SERVER_IP_V6" ]; then
+        echo "  IPv6: $SERVER_IP_V6"
+    fi
     echo ""
     read -p "Continue anyway? (y/N) " -n 1 -r
     echo
