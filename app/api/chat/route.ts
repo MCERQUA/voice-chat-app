@@ -20,9 +20,11 @@ export async function POST(request: NextRequest) {
 
     // Execute claude code with continuation flag
     // The -c flag maintains conversation context across messages
-    const command = `claude code -c "${session}" "${message.replace(/"/g, '\\"')}"`;
+    // Claude Code expects input from stdin, so we use echo
+    const escapedMessage = message.replace(/'/g, "'\"'\"'");  // Escape single quotes for bash
+    const command = `echo '${escapedMessage}' | claude code -c "${session}" --print`;
 
-    console.log(`[API] Executing: ${command}`);
+    console.log(`[API] Session: ${session}, Message: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
 
     const { stdout, stderr } = await execAsync(command, {
       cwd: '/home/josh/Josh-AI',
